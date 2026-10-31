@@ -285,6 +285,14 @@ from routes.discounts import bp as discounts_bp
 app.register_blueprint(products_bp)
 app.register_blueprint(subscriptions_bp)
 app.register_blueprint(discounts_bp)
+# --- Login / signup ---
+from extensions import login_manager
+from auth import bp as auth_bp
+import models_auth  # noqa: F401  (registers the users table and user loader)
+
+login_manager.init_app(app)
+login_manager.login_view = "auth.login"
+app.register_blueprint(auth_bp)
 
 
 @app.context_processor
