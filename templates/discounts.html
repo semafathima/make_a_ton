@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Discounts{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">New discount code</div>
+      <form method="post" class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3"><label class="form-label">Code</label>
+          <input name="code" class="form-control text-uppercase" required></div>
+        <div class="mb-3"><label class="form-label">Type</label>
+          <select name="kind" class="form-select">
+            <option value="percent">Percentage (%)</option>
+            <option value="fixed">Fixed amount</option>
+          </select></div>
+        <div class="mb-3"><label class="form-label">Value</label>
+          <input name="value" type="number" step="0.01" min="0" class="form-control" required></div>
+        <div class="mb-3"><label class="form-label">Valid until (optional)</label>
+          <input name="valid_until" type="date" class="form-control"></div>
+        <button class="btn btn-primary w-100">Create</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <table class="table bg-white shadow-sm align-middle">
+      <thead><tr><th>Code</th><th>Discount</th><th>Valid until</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for d in discounts %}
+        <tr>
+          <td class="fw-semibold">{{ d.code }}</td>
+          <td>{% if d.kind == 'percent' %}{{ d.value|float }}%{% else %}{{ cur }}{{ "%.2f"|format(d.value) }}{% endif %}</td>
+          <td>{{ d.valid_until or "-" }}</td>
+          <td><span class="badge text-bg-{{ 'success' if d.is_valid() else 'secondary' }}">{{ 'Active' if d.is_valid() else 'Inactive/Expired' }}</span></td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('discounts.toggle', discount_id=d.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-secondary">{{ 'Disable' if d.active else 'Enable' }}</button>
+            </form></td>
+        </tr>
+      {% else %}<tr><td colspan="5" class="text-muted">No discount codes yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

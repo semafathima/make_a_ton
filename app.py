@@ -15,8 +15,9 @@ from decimal import Decimal, InvalidOperation
 
 from flask import (Flask, abort, flash, redirect, render_template, request,
                    session, url_for)
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+
+from extensions import db  # CHANGED: shared db (was: from flask_sqlalchemy import SQLAlchemy)
 
 app = Flask(__name__)
 app.config.update(
@@ -26,7 +27,7 @@ app.config.update(
     PAYMENT_TERM_DAYS=14,  # invoice due date = billing date + this many days
     CURRENCY="$",
 )
-db = SQLAlchemy(app)
+db.init_app(app)  # CHANGED: was db = SQLAlchemy(app)
 
 CYCLE_MONTHS = {"monthly": 1, "quarterly": 3, "yearly": 12}
 PAYMENT_METHODS = ["Card", "Bank transfer", "Cash", "Cheque", "Other"]
@@ -275,9 +276,27 @@ def dashboard():
 
 
 # --------------------------------------------------------------------------
+# ADDED: Subscription & Product module (blueprints in routes/, models in models.py)
+# --------------------------------------------------------------------------
+from routes.products import bp as products_bp
+from routes.subscriptions import bp as subscriptions_bp
+from routes.discounts import bp as discounts_bp
+
+app.register_blueprint(products_bp)
+app.register_blueprint(subscriptions_bp)
+app.register_blueprint(discounts_bp)
+
+
+@app.context_processor
+def inject_currency():
+    return {"cur": app.config["CURRENCY"]}
+
+
+# --------------------------------------------------------------------------
 # Setup / demo data
 # --------------------------------------------------------------------------
 with app.app_context():
+    import models  # noqa: F401  (ADDED: registers Product, Plan, Quote... tables)
     db.create_all()
 
 
