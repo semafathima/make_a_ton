@@ -1,0 +1,66 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign up - Subscription Manager{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="row g-0">
+    <div class="col-md-5 auth-side">
+      <h2>Start managing subscriptions today.</h2>
+      <p class="mt-3">Create an account to set up plans, track renewals and keep invoices in order.</p>
+    </div>
+    <div class="col-md-7 auth-form">
+      <h1 class="mb-1">Create your account</h1>
+      <p class="text-muted mb-4">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+
+      <form method="post" action="{{ url_for('auth.signup') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label for="name" class="form-label">Full name</label>
+          <input type="text" class="form-control" id="name" name="name" value="{{ form.get('name', '') }}" autocomplete="name" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input type="email" class="form-control" id="email" name="email" value="{{ form.get('email', '') }}" autocomplete="email" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" autocomplete="new-password" required>
+          <ul class="pw-rules" id="pwRules">
+            <li data-rule="len">At least 8 characters</li>
+            <li data-rule="upper">One uppercase letter</li>
+            <li data-rule="lower">One lowercase letter</li>
+            <li data-rule="special">One special character</li>
+          </ul>
+        </div>
+
+        <div class="mb-4">
+          <label for="confirm_password" class="form-label">Confirm password</label>
+          <input type="password" class="form-control" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
+        </div>
+
+        <button type="submit" class="btn btn-brand w-100 py-2">Create account</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Live password checklist (the server still enforces the rules)
+  const pw = document.getElementById("password");
+  const rules = {
+    len: v => v.length >= 8,
+    upper: v => /[A-Z]/.test(v),
+    lower: v => /[a-z]/.test(v),
+    special: v => /[^A-Za-z0-9]/.test(v)
+  };
+  pw.addEventListener("input", () => {
+    document.querySelectorAll("#pwRules li").forEach(li => {
+      li.classList.toggle("ok", rules[li.dataset.rule](pw.value));
+    });
+  });
+</script>
+{% endblock %}
