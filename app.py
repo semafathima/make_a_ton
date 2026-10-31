@@ -294,6 +294,18 @@ login_manager.init_app(app)
 login_manager.login_view = "auth.login"
 app.register_blueprint(auth_bp)
 
+from flask_login import current_user
+
+
+@app.before_request
+def require_login():
+    """Everything except signup/login/static needs a logged-in user."""
+    endpoint = request.endpoint or ""
+    if endpoint == "static" or endpoint.startswith("auth."):
+        return
+    if not current_user.is_authenticated:
+        return redirect(url_for("auth.login", next=request.path))
+
 
 @app.context_processor
 def inject_currency():
