@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Subscriptions{% endblock %}
+{% block content %}
+{% set badge = {'Draft':'secondary','Quotation':'info','Confirmed':'primary','Active':'success','Closed':'dark'} %}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header fw-semibold">New quote</div>
+  <form method="post" action="{{ url_for('subscriptions.create_quote') }}" class="card-body row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="col-md-3"><label class="form-label">Customer</label>
+      <input name="customer_name" class="form-control" required></div>
+    <div class="col-md-3"><label class="form-label">Email</label>
+      <input name="customer_email" type="email" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Plan</label>
+      <select name="plan_id" class="form-select" required>
+        {% for p in plans %}<option value="{{ p.id }}">{{ p.label }} - {{ cur }}{{ "%.2f"|format(p.price) }}</option>
+        {% else %}<option value="">Add a product plan first</option>{% endfor %}
+      </select></div>
+    <div class="col-md-1"><label class="form-label">Qty</label>
+      <input name="quantity" type="number" min="1" value="1" class="form-control"></div>
+    <div class="col-md-2"><label class="form-label">Discount code</label>
+      <input name="discount_code" class="form-control text-uppercase"></div>
+    <div class="col-12"><button class="btn btn-primary">Create quote</button></div>
+  </form>
+</div>
+
+<h5>Quotes</h5>
+<table class="table bg-white shadow-sm align-middle mb-4">
+  <thead><tr><th>#</th><th>Customer</th><th>Plan</th><th>Qty</th><th>Subtotal</th><th>Discount</th><th>Total</th><th></th></tr></thead>
+  <tbody>
+  {% for q in quotes %}
+    <tr>
+      <td>{{ q.id }}</td><td>{{ q.customer_name }}</td><td>{{ q.plan.label }}</td><td>{{ q.quantity }}</td>
+      <td>{{ cur }}{{ "%.2f"|format(q.subtotal) }}</td>
+      <td>{% if q.discount_code %}{{ q.discount_code }} (-{{ cur }}{{ "%.2f"|format(q.discount_amount) }}){% else %}-{% endif %}</td>
+      <td class="fw-semibold">{{ cur }}{{ "%.2f"|format(q.total) }}</td>
+      <td class="text-end">
+        {% if q.subscription %}<span class="text-muted small">Subscription #{{ q.subscription.id }}</span>
+        {% else %}
+        <form method="post" action="{{ url_for('subscriptions.convert_quote', quote_id=q.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-primary">Create subscription</button></form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="8" class="text-muted">No quotes yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h5>Subscriptions</h5>
+<table class="table bg-white shadow-sm align-middle">
+  <thead><tr><th>#</th><th>Customer</th><th>Plan</th><th>Total</th><th>State</th><th></th></tr></thead>
+  <tbody>
+  {% for s in subscriptions %}
+    <tr>
+      <td>{{ s.id }}</td><td>{{ s.customer_name }}</td><td>{{ s.plan.label }}</td>
+      <td>{{ cur }}{{ "%.2f"|format(s.total) }}</td>
+      <td><span class="badge text-bg-{{ badge[s.state] }}">{{ s.state }}</span></td>
+      <td class="text-end">
+        {% if s.next_state %}
+        <form method="post" action="{{ url_for('subscriptions.transition', sub_id=s.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="to" value="{{ s.next_state }}">
+          <button class="btn btn-sm btn-success">Move to {{ s.next_state }}</button>
+        </form>
+        {% else %}<span class="text-muted small">Closed</span>{% endif %}
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="6" class="text-muted">No subscriptions yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

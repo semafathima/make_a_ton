@@ -15,7 +15,7 @@
       </button>
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav">
-          {% for endpoint, label in [('dashboard', 'Dashboard'), ('invoices', 'Invoices'), ('payments', 'Payments')] %}
+          {% for endpoint, label in [('dashboard', 'Dashboard'), ('invoices', 'Invoices'), ('payments', 'Payments'), ('products.index', 'Products'), ('subscriptions.index', 'Subscriptions'), ('discounts.index', 'Discounts')] %}
           <li class="nav-item">
             <a class="nav-link {{ 'active' if request.endpoint == endpoint }}"
                href="{{ url_for(endpoint) }}">{{ label }}</a>
