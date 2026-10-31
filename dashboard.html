@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% macro stat(label, value, sub='', accent='') -%}
+<div class="col-6 col-lg-3">
+  <div class="card shadow-sm h-100 {{ 'border-' ~ accent ~ ' border-2' if accent }}">
+    <div class="card-body">
+      <div class="text-muted small text-uppercase">{{ label }}</div>
+      <div class="fs-3 fw-semibold">{{ value }}</div>
+      {% if sub %}<div class="small text-muted">{{ sub }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{%- endmacro %}
+
+{% block content %}
+<h1 class="h3 mb-3">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+  {{ stat('Active subscriptions', stats.active_subscriptions, 'MRR ' ~ (stats.mrr_cents|money)) }}
+  {{ stat('Total revenue', stats.revenue_cents|money, 'All payments received', 'success') }}
+  {{ stat('Pending invoices', stats.pending_count, (stats.pending_cents|money) ~ ' outstanding', 'warning') }}
+  {{ stat('Overdue invoices', stats.overdue_count, (stats.overdue_cents|money) ~ ' outstanding', 'danger') }}
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Overdue invoices</span>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('invoices', status='Overdue') }}">View all</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Days late</th><th class="text-end">Balance</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for inv in overdue %}
+        <tr>
+          <td>{{ inv.number }}</td>
+          <td>{{ inv.subscription.customer_name }}</td>
+          <td>{{ inv.due_date.strftime('%d %b %Y') }}</td>
+          <td class="text-danger">{{ (today - inv.due_date).days }}</td>
+          <td class="text-end">{{ inv.balance_cents|money }}</td>
+          <td class="text-end">
+            <a class="btn btn-outline-success btn-sm" href="{{ url_for('payments', invoice_id=inv.id) }}">Record payment</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Nothing overdue.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

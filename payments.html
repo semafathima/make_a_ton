@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Payments{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Payments</h1>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Record a payment</div>
+      <div class="card-body">
+        {% if open_invoices %}
+        <form method="post" action="{{ url_for('payments') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label class="form-label" for="invoice_id">Open invoice</label>
+            <select class="form-select" id="invoice_id" name="invoice_id" required>
+              <option value="">Select an invoice…</option>
+              {% for inv in open_invoices %}
+              <option value="{{ inv.id }}" data-balance="{{ '%.2f' % (inv.balance_cents / 100) }}"
+                      {{ 'selected' if selected == inv.id }}>
+                {{ inv.number }} · {{ inv.subscription.customer_name }} · due {{ inv.due_date.strftime('%d %b') }}
+                · {{ inv.balance_cents|money }} {{ '(OVERDUE)' if inv.status == 'Overdue' }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="amount">Amount</label>
+              <input class="form-control" id="amount" name="amount" type="number" step="0.01" min="0.01"
+                     value="{{ request.form.get('amount', '') }}" required>
+              <div class="form-text">Partial payments are allowed.</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="paid_on">Payment date</label>
+              <input class="form-control" id="paid_on" name="paid_on" type="date"
+                     max="{{ today.isoformat() }}" value="{{ request.form.get('paid_on', today.isoformat()) }}" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="method">Method</label>
+            <select class="form-select" id="method" name="method" required>
+              {% for m in methods %}
+              <option {{ 'selected' if request.form.get('method') == m }}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="reference">Reference / transaction ID</label>
+            <input class="form-control" id="reference" name="reference" maxlength="80"
+                   value="{{ request.form.get('reference', '') }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="notes">Notes</label>
+            <textarea class="form-control" id="notes" name="notes" rows="2" maxlength="255">{{ request.form.get('notes', '') }}</textarea>
+          </div>
+
+          <button class="btn btn-success w-100">Record payment</button>
+        </form>
+        {% else %}
+        <p class="text-muted mb-0">There are no open invoices. Generated invoices will appear here.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Recent payments</div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Method</th><th>Ref</th><th class="text-end">Amount</th></tr>
+          </thead>
+          <tbody>
+            {% for p in recent %}
+            <tr>
+              <td>{{ p.paid_on.strftime('%d %b %Y') }}</td>
+              <td>{{ p.invoice.number }}</td>
+              <td>{{ p.invoice.subscription.customer_name }}</td>
+              <td>{{ p.method }}</td>
+              <td>{{ p.reference or '—' }}</td>
+              <td class="text-end">{{ p.amount_cents|money }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-4">No payments recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Pre-fill the amount with the invoice's outstanding balance when an invoice is chosen.
+  const select = document.getElementById('invoice_id');
+  const amount = document.getElementById('amount');
+  function fillBalance() {
+    const opt = select && select.selectedOptions[0];
+    if (opt && opt.dataset.balance && !amount.value) amount.value = opt.dataset.balance;
+  }
+  if (select) {
+    select.addEventListener('change', () => { amount.value = ''; fillBalance(); });
+    fillBalance();
+  }
+</script>
+{% endblock %}

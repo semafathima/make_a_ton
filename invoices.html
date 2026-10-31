@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Invoices{% endblock %}
+
+{% macro badge(status) -%}
+  <span class="badge text-bg-{{ {'Paid': 'success', 'Pending': 'warning', 'Overdue': 'danger'}[status] }}">{{ status }}</span>
+{%- endmacro %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Invoices</h1>
+  <form method="post" action="{{ url_for('generate_invoices') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primary btn-sm">Run billing cycle</button>
+  </form>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  {% for key, label in [('all', 'All'), ('Pending', 'Pending'), ('Overdue', 'Overdue'), ('Paid', 'Paid')] %}
+  <li class="nav-item">
+    <a class="nav-link {{ 'active' if status == key }}" href="{{ url_for('invoices', status=key) }}">{{ label }}</a>
+  </li>
+  {% endfor %}
+</ul>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Invoice</th><th>Customer</th><th>Plan</th><th>Billed</th><th>Due</th>
+          <th class="text-end">Amount</th><th class="text-end">Balance</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td class="fw-semibold">{{ inv.number }}</td>
+          <td>{{ inv.subscription.customer_name }}</td>
+          <td>{{ inv.subscription.plan }}</td>
+          <td>{{ inv.billing_date.strftime('%d %b %Y') }}</td>
+          <td class="{{ 'text-danger' if inv.status == 'Overdue' }}">
+            {{ inv.due_date.strftime('%d %b %Y') }}
+            {% if inv.status == 'Overdue' %}<small>({{ (today - inv.due_date).days }}d late)</small>{% endif %}
+          </td>
+          <td class="text-end">{{ inv.amount_cents|money }}</td>
+          <td class="text-end">{{ inv.balance_cents|money }}</td>
+          <td>{{ badge(inv.status) }}</td>
+          <td class="text-end">
+            {% if inv.status != 'Paid' %}
+            <a class="btn btn-outline-success btn-sm" href="{{ url_for('payments', invoice_id=inv.id) }}">Record payment</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-4">No invoices to show.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
