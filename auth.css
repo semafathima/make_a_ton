@@ -1,0 +1,41 @@
+:root {
+  --ink: #14262b;
+  --paper: #f2f5f4;
+  --teal: #0e6b63;
+  --teal-dark: #0a524c;
+  --line: #d5dedb;
+  --bs-body-font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bs-body-color: var(--ink);
+  --bs-body-bg: var(--paper);
+  --bs-link-color: var(--teal);
+  --bs-link-hover-color: var(--teal-dark);
+}
+
+body { font-family: var(--bs-body-font-family); min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+
+.navbar-brand { font-weight: 800; letter-spacing: -0.02em; }
+.app-nav { background: var(--ink); }
+
+.btn-brand { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
+.btn-brand:hover, .btn-brand:focus { background: var(--teal-dark); border-color: var(--teal-dark); color: #fff; }
+.btn-outline-brand { border-color: var(--teal); color: var(--teal); font-weight: 600; }
+.btn-outline-brand:hover { background: var(--teal); color: #fff; }
+.form-control:focus, .form-check-input:focus { border-color: var(--teal); box-shadow: 0 0 0 .2rem rgba(14, 107, 99, .2); }
+.form-check-input:checked { background-color: var(--teal); border-color: var(--teal); }
+
+/* Auth pages: ink panel on the left, form on the right */
+.auth-wrap { max-width: 980px; margin: 2.5rem auto; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+.auth-side { background: var(--ink); color: #e6efed; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+.auth-side h2 { font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+.auth-side p { color: #a9bdb9; margin-bottom: 0; max-width: 32ch; }
+.auth-form { padding: 2.5rem; }
+.auth-form h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+
+.pw-rules { list-style: none; padding: 0; margin: .5rem 0 0; font-size: .85rem; color: #6b7c79; }
+.pw-rules li::before { content: "\2715\00a0"; color: #b4443a; }
+.pw-rules li.ok { color: var(--teal); }
+.pw-rules li.ok::before { content: "\2713\00a0"; color: var(--teal); }
+
+.hero { padding: 5rem 0; }
+.hero h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; max-width: 16ch; }
